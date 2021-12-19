@@ -133,8 +133,6 @@ import "github.com/antlr/antlr4/runtime/Go/antlr"
 
 type Base<file.grammarName>Visitor[T any] struct {
 	*antlr.BaseParseTreeVisitor[T]
-
-	rootVisitor <file.grammarName>Visitor[T]
 }
 
 func NewBase<file.grammarName>Visitor[T any](root JavaParserVisitor[T]) *Base<file.grammarName>Visitor[T] {
@@ -142,6 +140,37 @@ func NewBase<file.grammarName>Visitor[T any](root JavaParserVisitor[T]) *Base<fi
 		BaseParseTreeVisitor: antlr.NewBaseParseTreeVisitor[T](root),
 	}
 }
+
+func (v *BaseJavaParserVisitor[T]) Accept(tree antlr.ParseTree) T {
+
+
+	if v == nil {
+		panic("nil visitor")
+	\}
+
+	if v.BaseParseTreeVisitor.RootVisitor == nil {
+		panic("nil root visitor")
+	\}
+
+	if tree == nil {
+		panic("nil tree")
+	\}
+
+	switch ttree := tree.(type) {
+	case *antlr.TerminalNodeImpl:
+		return v.RootVisitor.VisitTerminal(ttree)
+	case *antlr.ErrorNodeImpl:
+		return v.RootVisitor.VisitErrorNode(ttree)
+
+<file.visitorNames:{lname |
+	case *<lname; format="cap">Context:
+		return v.BaseParseTreeVisitor.RootVisitor.(<file.grammarName>Visitor[T]).Visit<lname; format="cap">(ttree)
+}; separator="\n">
+
+	\}
+	var zero T
+	return zero
+\}
 
 <file.visitorNames:{lname |
 func (v *Base<file.grammarName>Visitor[T]) Visit<lname; format="cap">(ctx *<lname; format="cap">Context) T {
@@ -1240,15 +1269,6 @@ func (s *<struct.name>) <if(method.isEnter)>Enter<else>Exit<endif>Rule(listener 
 >>
 
 VisitorDispatchMethod(method) ::= <<
-func (s *<struct.name>) Accept(visitor antlr.ParseTreeVisitor) interface{} {
-	switch t := visitor.(type) {
-	case <parser.grammarName>Visitor[T]:
-		return t.Visit<struct.derivedFromName; format="cap">(s)
-
-	default:
-		return t.VisitChildren(s)
-	}
-}
 >>
 
 /** If we don't know location of label def x, use this template */
