@@ -143,19 +143,6 @@ func NewBase<file.grammarName>Visitor[T any](root JavaParserVisitor[T]) *Base<fi
 
 func (v *BaseJavaParserVisitor[T]) Accept(tree antlr.ParseTree) T {
 
-
-	if v == nil {
-		panic("nil visitor")
-	\}
-
-	if v.BaseParseTreeVisitor.RootVisitor == nil {
-		panic("nil root visitor")
-	\}
-
-	if tree == nil {
-		panic("nil tree")
-	\}
-
 	switch ttree := tree.(type) {
 	case *antlr.TerminalNodeImpl:
 		return v.RootVisitor.VisitTerminal(ttree)
