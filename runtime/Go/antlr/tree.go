@@ -53,34 +53,32 @@ type ErrorNode interface {
 	errorNode()
 }
 
-type ParseTreeVisitor interface {
-	Visit(tree ParseTree) interface{}
-	VisitChildren(node RuleNode) interface{}
-	VisitTerminal(node TerminalNode) interface{}
-	VisitErrorNode(node ErrorNode) interface{}
+type ParseTreeVisitor[T any] interface {
+	Visit(tree ParseTree) T
+	VisitChildren(node RuleNode) T
+	VisitTerminal(node TerminalNode) T
+	VisitErrorNode(node ErrorNode) T
 
-	DefaultResult() interface{}
-	ShouldVisitNextChild(node RuleNode, result interface{}) bool
-	AggregateResult(result, childResult interface{}) interface{}
+	DefaultResult() T
+	ShouldVisitNextChild(node RuleNode, result T) bool
+	AggregateResult(result, childResult T) T
 }
 
-type BaseParseTreeVisitor struct {
-	rootVisitor ParseTreeVisitor
+type BaseParseTreeVisitor[T any] struct {
+	rootVisitor ParseTreeVisitor[T]
 }
 
-var _ ParseTreeVisitor = &BaseParseTreeVisitor{}
-
-func NewBaseParseTreeVisitor(root ParseTreeVisitor) *BaseParseTreeVisitor {
-	return &BaseParseTreeVisitor{
+func NewBaseParseTreeVisitor[T any](root ParseTreeVisitor[T]) *BaseParseTreeVisitor[T] {
+	return &BaseParseTreeVisitor[T]{
 		rootVisitor: root,
 	}
 }
 
-func (v *BaseParseTreeVisitor) Visit(tree ParseTree) interface{} {
-	return tree.Accept(v.rootVisitor)
+func (v *BaseParseTreeVisitor[T]) Visit(tree ParseTree) T {
+	return tree.Accept(v.rootVisitor).(T)
 }
 
-func (v *BaseParseTreeVisitor) VisitChildren(node RuleNode) interface{} {
+func (v *BaseParseTreeVisitor[T]) VisitChildren(node RuleNode) T {
 	result := v.rootVisitor.DefaultResult()
 	n := node.GetChildCount()
 	for i := 0; i < n; i++ {
@@ -90,29 +88,30 @@ func (v *BaseParseTreeVisitor) VisitChildren(node RuleNode) interface{} {
 
 		c := node.GetChild(i).(ParseTree) // ParseTree?
 		childResult := c.Accept(v.rootVisitor)
-		result = v.rootVisitor.AggregateResult(result, childResult)
+		result = v.rootVisitor.AggregateResult(result, childResult.(T))
 	}
 
 	return result
 }
 
-func (v *BaseParseTreeVisitor) DefaultResult() interface{} {
-	return nil
+func (v *BaseParseTreeVisitor[T]) DefaultResult() T {
+	var zero T
+	return zero
 }
 
-func (v *BaseParseTreeVisitor) VisitTerminal(node TerminalNode) interface{} {
+func (v *BaseParseTreeVisitor[T]) VisitTerminal(node TerminalNode) T {
 	return v.rootVisitor.DefaultResult()
 }
 
-func (v *BaseParseTreeVisitor) VisitErrorNode(node ErrorNode) interface{} {
+func (v *BaseParseTreeVisitor[T]) VisitErrorNode(node ErrorNode) T {
 	return v.rootVisitor.DefaultResult()
 }
 
-func (v *BaseParseTreeVisitor) AggregateResult(aggregate, nextResult interface{}) interface{} {
+func (v *BaseParseTreeVisitor[T]) AggregateResult(aggregate, nextResult T) T {
 	return nextResult
 }
 
-func (v *BaseParseTreeVisitor) ShouldVisitNextChild(node RuleNode, currentResult interface{}) bool {
+func (v *BaseParseTreeVisitor[T]) ShouldVisitNextChild(node RuleNode, currentResult T) bool {
 	return true
 }
 

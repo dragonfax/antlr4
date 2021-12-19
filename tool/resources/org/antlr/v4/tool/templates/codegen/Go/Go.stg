@@ -110,12 +110,12 @@ import "github.com/antlr/antlr4/runtime/Go/antlr"
 <endif>
 
 // A complete Visitor for a parse tree produced by <file.parserName>.
-type <file.grammarName>Visitor interface {
-	antlr.ParseTreeVisitor
+type <file.grammarName>Visitor[T any] interface {
+	antlr.ParseTreeVisitor[T]
 
 <file.visitorNames:{lname |
 	// Visit a parse tree produced by <file.parserName>#<lname>.
-	Visit<lname; format="cap">(ctx *<lname; format="cap">Context) interface{\}
+	Visit<lname; format="cap">(ctx *<lname; format="cap">Context) T
 }; separator="\n">
 }
 >>
@@ -131,20 +131,20 @@ package parser // <file.grammarName>
 
 import "github.com/antlr/antlr4/runtime/Go/antlr"
 
-type Base<file.grammarName>Visitor struct {
-	*antlr.BaseParseTreeVisitor
+type Base<file.grammarName>Visitor[T any] struct {
+	*antlr.BaseParseTreeVisitor[T]
 
-	rootVisitor JavaParserVisitor
+	rootVisitor <file.grammarName>Visitor[T]
 }
 
-func NewBase<file.grammarName>Visitor(root JavaParserVisitor) *Base<file.grammarName>Visitor {
-	return &Base<file.grammarName>Visitor{
-		BaseParseTreeVisitor: antlr.NewBaseParseTreeVisitor(root),
+func NewBase<file.grammarName>Visitor[T any](root JavaParserVisitor[T]) *Base<file.grammarName>Visitor[T] {
+	return &Base<file.grammarName>Visitor[T]{
+		BaseParseTreeVisitor: antlr.NewBaseParseTreeVisitor[T](root),
 	}
 }
 
 <file.visitorNames:{lname |
-func (v *Base<file.grammarName>Visitor) Visit<lname; format="cap">(ctx *<lname; format="cap">Context) interface{\} {
+func (v *Base<file.grammarName>Visitor[T]) Visit<lname; format="cap">(ctx *<lname; format="cap">Context) T {
 	return v.VisitChildren(ctx)
 \}}; separator="\n\n">
 
@@ -1242,7 +1242,7 @@ func (s *<struct.name>) <if(method.isEnter)>Enter<else>Exit<endif>Rule(listener 
 VisitorDispatchMethod(method) ::= <<
 func (s *<struct.name>) Accept(visitor antlr.ParseTreeVisitor) interface{} {
 	switch t := visitor.(type) {
-	case <parser.grammarName>Visitor:
+	case <parser.grammarName>Visitor[T]:
 		return t.Visit<struct.derivedFromName; format="cap">(s)
 
 	default:
